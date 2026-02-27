@@ -78,10 +78,15 @@ function heatColorByRate(rate: number): string {
 }
 
 export default function Page() {
+  const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
+  const today = new Date();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(today.getDate() - 7);
+
   const [mosaicBrand, setMosaicBrand] = useState("bebodywise");
   const [competitor, setCompetitor] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(toIsoDate(sevenDaysAgo));
+  const [endDate, setEndDate] = useState(toIsoDate(today));
   const [creativeFormat, setCreativeFormat] = useState("");
   const [messageTheme, setMessageTheme] = useState("");
   const [status, setStatus] = useState<"active" | "inactive" | "all">("all");
