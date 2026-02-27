@@ -4,6 +4,8 @@ const DEFAULT_PROD_API_URL = "https://competitor-ad-war-room-api.onrender.com/ap
 const API_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   (process.env.NODE_ENV === "production" ? DEFAULT_PROD_API_URL : "http://127.0.0.1:8000/api/v1");
+const BASE_PATH = process.env.NODE_ENV === "production" ? "/adwarroom" : "";
+const DEFAULT_BRAND = "bebodywise";
 
 export type DashboardFilters = {
   mosaic_brand?: string;
@@ -23,9 +25,29 @@ function withQuery(path: string, params: Record<string, string | undefined>) {
   return `${API_URL}${path}?${search.toString()}`;
 }
 
+function brandOrDefault(mosaicBrand?: string): string {
+  return mosaicBrand || DEFAULT_BRAND;
+}
+
+async function fetchJsonWithFallback<T>(primaryUrl: string, fallbackPath: string): Promise<T> {
+  try {
+    const res = await fetch(primaryUrl, { cache: "no-store" });
+    if (res.ok) return res.json();
+  } catch (_err) {
+    // Fallback handled below.
+  }
+
+  const fallback = await fetch(`${BASE_PATH}${fallbackPath}`, { cache: "no-store" });
+  if (!fallback.ok) {
+    throw new Error("Failed to fetch dashboard data");
+  }
+  return fallback.json();
+}
+
 export async function getDashboard(filters: DashboardFilters): Promise<DashboardPayload> {
+  const brand = brandOrDefault(filters.mosaic_brand);
   const url = withQuery("/dashboard", {
-    mosaic_brand: filters.mosaic_brand,
+    mosaic_brand: brand,
     competitor: filters.competitor,
     start_date: filters.start_date,
     end_date: filters.end_date,
@@ -33,14 +55,13 @@ export async function getDashboard(filters: DashboardFilters): Promise<Dashboard
     message_theme: filters.message_theme,
     status: filters.status,
   });
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch dashboard data");
-  return res.json();
+  return fetchJsonWithFallback<DashboardPayload>(url, `/mock/dashboard-${brand}.json`);
 }
 
 export async function getLiveInsights(filters: DashboardFilters): Promise<LiveInsightsPayload> {
+  const brand = brandOrDefault(filters.mosaic_brand);
   const url = withQuery("/insights/live", {
-    mosaic_brand: filters.mosaic_brand,
+    mosaic_brand: brand,
     competitor: filters.competitor,
     start_date: filters.start_date,
     end_date: filters.end_date,
@@ -48,22 +69,20 @@ export async function getLiveInsights(filters: DashboardFilters): Promise<LiveIn
     message_theme: filters.message_theme,
     status: filters.status,
   });
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch live insights");
-  return res.json();
+  return fetchJsonWithFallback<LiveInsightsPayload>(url, `/mock/live-insights-${brand}.json`);
 }
 
 export async function getCompetitors(mosaicBrand?: string): Promise<Competitor[]> {
-  const url = withQuery("/competitors", { mosaic_brand: mosaicBrand });
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch competitors");
-  return res.json();
+  const brand = brandOrDefault(mosaicBrand);
+  const url = withQuery("/competitors", { mosaic_brand: brand });
+  return fetchJsonWithFallback<Competitor[]>(url, `/mock/competitors-${brand}.json`);
 }
 
 export async function getWeeklyBrief(mosaicBrand: string): Promise<WeeklyBriefPayload> {
-  const res = await fetch(`${API_URL}/weekly-brief/${mosaicBrand}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch weekly brief");
-  return res.json();
+  return fetchJsonWithFallback<WeeklyBriefPayload>(
+    `${API_URL}/weekly-brief/${mosaicBrand}`,
+    `/mock/weekly-brief-${brandOrDefault(mosaicBrand)}.json`,
+  );
 }
 
 export function getWeeklyBriefPdfUrl(mosaicBrand: string): string {
