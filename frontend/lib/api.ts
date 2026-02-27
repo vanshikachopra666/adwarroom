@@ -6,6 +6,7 @@ const API_URL =
   (process.env.NODE_ENV === "production" ? DEFAULT_PROD_API_URL : "http://127.0.0.1:8000/api/v1");
 const BASE_PATH = process.env.NODE_ENV === "production" ? "/adwarroom" : "";
 const DEFAULT_BRAND = "bebodywise";
+const SHOULD_PREFER_MOCK_IN_PROD = process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type DashboardFilters = {
   mosaic_brand?: string;
@@ -30,18 +31,28 @@ function brandOrDefault(mosaicBrand?: string): string {
 }
 
 async function fetchJsonWithFallback<T>(primaryUrl: string, fallbackPath: string): Promise<T> {
-  try {
-    const res = await fetch(primaryUrl, { cache: "no-store" });
-    if (res.ok) return res.json();
-  } catch (_err) {
-    // Fallback handled below.
+  const fetchFallback = async () => {
+    const fallback = await fetch(`${BASE_PATH}${fallbackPath}`, { cache: "no-store" });
+    if (!fallback.ok) {
+      throw new Error("Failed to fetch dashboard data");
+    }
+    return fallback.json() as Promise<T>;
+  };
+
+  if (SHOULD_PREFER_MOCK_IN_PROD) {
+    return fetchFallback();
   }
 
-  const fallback = await fetch(`${BASE_PATH}${fallbackPath}`, { cache: "no-store" });
-  if (!fallback.ok) {
-    throw new Error("Failed to fetch dashboard data");
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const res = await fetch(primaryUrl, { cache: "no-store" });
+      if (res.ok) return res.json();
+    } catch (_err) {
+      // Retry once before fallback.
+    }
   }
-  return fallback.json();
+
+  return fetchFallback();
 }
 
 export async function getDashboard(filters: DashboardFilters): Promise<DashboardPayload> {

@@ -113,12 +113,13 @@ export default function Page() {
     if (!data?.theme_trend?.length) return [];
     return data.theme_trend;
   }, [data]);
-  if (error) {
-    return <div className="p-8 text-rose-300">Failed to load dashboard data.</div>;
-  }
-
   return (
     <main className="mx-auto max-w-[1440px] space-y-6 px-4 py-6 md:px-8">
+      {error && (
+        <div className="rounded-lg border border-amber-300/35 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
+          Live API is temporarily unavailable. Showing available dashboard data.
+        </div>
+      )}
       <section className="panel p-6">
         <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
           <div>
