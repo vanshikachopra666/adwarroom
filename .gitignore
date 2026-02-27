@@ -1,0 +1,31 @@
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Local env and secrets
+.env
+**/.env
+*.pem
+*.key
+backend/META_ACCESS_TOKEN.txt
+
+# Runtime data/logs
+*.log
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/tsconfig.tsbuildinfo
+
+# Playwright local artifacts
+.playwright-cli/
