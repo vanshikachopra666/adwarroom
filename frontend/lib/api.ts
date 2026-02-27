@@ -30,6 +30,13 @@ function brandOrDefault(mosaicBrand?: string): string {
   return mosaicBrand || DEFAULT_BRAND;
 }
 
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 async function fetchJsonWithFallback<T>(primaryUrl: string, fallbackPath: string): Promise<T> {
   const fetchFallback = async () => {
     const fallback = await fetch(`${BASE_PATH}${fallbackPath}`, { cache: "no-store" });
@@ -57,6 +64,7 @@ async function fetchJsonWithFallback<T>(primaryUrl: string, fallbackPath: string
 
 export async function getDashboard(filters: DashboardFilters): Promise<DashboardPayload> {
   const brand = brandOrDefault(filters.mosaic_brand);
+  const competitorSlug = filters.competitor ? slugify(filters.competitor) : "";
   const url = withQuery("/dashboard", {
     mosaic_brand: brand,
     competitor: filters.competitor,
@@ -66,11 +74,13 @@ export async function getDashboard(filters: DashboardFilters): Promise<Dashboard
     message_theme: filters.message_theme,
     status: filters.status,
   });
-  return fetchJsonWithFallback<DashboardPayload>(url, `/mock/dashboard-${brand}.json`);
+  const fallbackPath = competitorSlug ? `/mock/dashboard-${brand}-${competitorSlug}.json` : `/mock/dashboard-${brand}.json`;
+  return fetchJsonWithFallback<DashboardPayload>(url, fallbackPath);
 }
 
 export async function getLiveInsights(filters: DashboardFilters): Promise<LiveInsightsPayload> {
   const brand = brandOrDefault(filters.mosaic_brand);
+  const competitorSlug = filters.competitor ? slugify(filters.competitor) : "";
   const url = withQuery("/insights/live", {
     mosaic_brand: brand,
     competitor: filters.competitor,
@@ -80,7 +90,8 @@ export async function getLiveInsights(filters: DashboardFilters): Promise<LiveIn
     message_theme: filters.message_theme,
     status: filters.status,
   });
-  return fetchJsonWithFallback<LiveInsightsPayload>(url, `/mock/live-insights-${brand}.json`);
+  const fallbackPath = competitorSlug ? `/mock/live-insights-${brand}-${competitorSlug}.json` : `/mock/live-insights-${brand}.json`;
+  return fetchJsonWithFallback<LiveInsightsPayload>(url, fallbackPath);
 }
 
 export async function getCompetitors(mosaicBrand?: string): Promise<Competitor[]> {

@@ -149,7 +149,13 @@ export default function Page() {
         <div className="rounded-xl border border-cyan-100/20 bg-cyan-100/5 p-3">
           <p className="mb-3 text-[11px] uppercase tracking-[0.1em] text-cyan-100/70">Dashboard Filters</p>
           <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-7">
-          <select value={mosaicBrand} onChange={(e) => setMosaicBrand(e.target.value)}>
+          <select
+            value={mosaicBrand}
+            onChange={(e) => {
+              setMosaicBrand(e.target.value);
+              setCompetitor("");
+            }}
+          >
             {mosaicBrands.map((brand) => (
               <option key={brand.value} value={brand.value}>
                 {brand.label}
