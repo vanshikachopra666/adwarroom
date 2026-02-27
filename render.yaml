@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: competitor-ad-war-room-api
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: APP_ENV
+        value: production
+
+  - type: cron
+    name: competitor-ad-war-room-weekly
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    schedule: "0 2 * * 1"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
+    dockerCommand: "python -m app.workers.weekly_job"
