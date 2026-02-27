@@ -97,5 +97,9 @@ export async function getWeeklyBrief(mosaicBrand: string): Promise<WeeklyBriefPa
 }
 
 export function getWeeklyBriefPdfUrl(mosaicBrand: string): string {
-  return `${API_URL}/weekly-brief/${mosaicBrand}/pdf`;
+  const brand = brandOrDefault(mosaicBrand);
+  if (SHOULD_PREFER_MOCK_IN_PROD) {
+    return `${BASE_PATH}/mock/weekly-brief-${brand}.pdf`;
+  }
+  return `${API_URL}/weekly-brief/${brand}/pdf`;
 }
